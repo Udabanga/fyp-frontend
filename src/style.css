@@ -1,0 +1,21 @@
+.App {
+  padding-top: 10px;
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 18px;
+  color: white;
+}
+
+.Audio-output{
+    text-align: center;
+}
+
+.Audio-upload-container{
+    display: inline-flex;
+}
+
+.Aduio-input-form{
+    display: inline-grid
+}
