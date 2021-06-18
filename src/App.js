@@ -26,7 +26,7 @@ function App() {
     formData.append("file", e.target.files[0]);
     //Code to send audio to backend
     await axios
-      .post("http://127.0.0.1:8000/api/uploadRecording", formData)
+      .post("http://127.0.0.1:5000/api/uploadRecording", formData)
       .then(function (response) {
         console.log(response);
         setSpectrogram(
