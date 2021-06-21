@@ -21,6 +21,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [record, setRecord] = useState(false);
 
+  const [noiseReduction, setNoiseReduction] = useState(false);
+
   const [recordState, setRecordState] = useState(null);
   // const [prediction, setPrediction] = useState({});
 
@@ -33,11 +35,13 @@ function App() {
 
     let formData = new FormData();
     formData.append("file", e.target.files[0]);
+    formData.append("noiseReduction", noiseReduction)
     //Code to send audio to backend
     sendAudio(formData)
   };
 
   const sendAudio = async (formData) => {
+    console.log(noiseReduction)
     await axios
       .post("http://127.0.0.1:5000/api/uploadRecording", formData)
       .then(function (response) {
@@ -51,7 +55,7 @@ function App() {
         setNoiseReducedAudio("data:audio/wav;base64," + response.data.audio_nr);
         // setPrediction(response.data.prediction)
         prediction = JSON.parse(response.data.prediction)
-        prediction_nr = JSON.parse(response.data.prediction_nr)
+        // prediction_nr = JSON.parse(response.data.prediction_nr)
 
         setLoading(false);
       })
@@ -67,35 +71,6 @@ function App() {
       {
         label: 'Emotion Probability',
         data: [prediction.angry, prediction.disgust, prediction.fear, prediction.happy, prediction.neutral, prediction.sad, prediction.surprise],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(255, 159, 64, 0.2)',
-          'rgba(255, 205, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(201, 203, 207, 0.2)'
-        ],
-        borderColor: [
-          'rgb(255, 99, 132)',
-          'rgb(255, 159, 64)',
-          'rgb(255, 205, 86)',
-          'rgb(75, 192, 192)',
-          'rgb(54, 162, 235)',
-          'rgb(153, 102, 255)',
-          'rgb(201, 203, 207)'
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const data_nr = {
-    labels: ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise'],
-    datasets: [
-      {
-        label: 'Emotion Probability',
-        data: [prediction_nr.angry, prediction_nr.disgust, prediction_nr.fear, prediction_nr.happy, prediction_nr.neutral, prediction_nr.sad, prediction_nr.surprise],
         backgroundColor: [
           'rgba(255, 99, 132, 0.2)',
           'rgba(255, 159, 64, 0.2)',
@@ -171,7 +146,7 @@ function App() {
             <Form>
               <Form.Group className="Aduio-input-form" controlId="formAudio">
                 <Form.Label>Audio File Input:</Form.Label>
-                <div className="Audio-upload-container">
+                <Row className="Audio-upload-container">
                   <Form.File
                     type="file"
                     accept="audio/wav"
@@ -183,7 +158,34 @@ function App() {
                       <strong> Processing</strong>
                     </div>
                   )}
-                </div>
+                </Row>
+                <Row>
+                <Row> </Row>
+                <Col>
+                <Form.Label>  
+                  Noise Reduction:
+                </Form.Label>
+                </Col>
+                <Col >
+                  <Form.Check
+                    type="radio"
+                    label="Enable"
+                    name="noiseReduceRadio"
+                    id="noiseReduceRadio1"
+                    // value={true}
+                    onChange={(e) => setNoiseReduction(true)}
+                  />
+                  <Form.Check
+                    type="radio"
+                    label="Disable"
+                    name="noiseReduceRadio"
+                    id="noiseReduceRadio2"
+                    // value={false}
+                    onChange={(e) => setNoiseReduction(false)}
+                    defaultChecked
+                  />
+                </Col>
+                </Row>
               </Form.Group>
             </Form>
           </Col>
@@ -200,9 +202,6 @@ function App() {
             // strokeColor="#000000"
             // backgroundColor="#FF4081"
             />
-
-            {/* <AudioRecorder /> */}
-            {/* <AudioReactRecorder state={recordState} onStop={onStop} /> */}
             <button onClick={startRecording} type="button">Start</button>
             <button onClick={stopRecording} type="button">Stop</button>
           </Col>
@@ -213,14 +212,17 @@ function App() {
             <h3>Input Audio</h3>
             <audio controls src={audioPreview} />
             <img style={{ width: "100%" }} src={spectrogram} />
-            <Bar data={data} options={options} />
+            {/* <Bar data={data} options={options} hidden={spectrogram == null}/> */}
           </Col>
           <Col className="Audio-output">
             <h3>Noise Reduced Audio</h3>
             <audio controls src={noiseReducedAudio} />
             <img style={{ width: "100%" }} src={noiseReducedSpectrogram} />
-            <Bar data={data_nr} options={options} />
+            {/* <Bar data={data_nr} options={options} hidden={noiseReducedSpectrogram == null}/> */}
           </Col>
+        </Row>
+        <Row>
+        <Bar data={data} options={options} hidden={spectrogram == null}/>
         </Row>
       </Container>
     </div>
