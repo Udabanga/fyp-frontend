@@ -1,42 +1,29 @@
 import { useState } from "react";
 import { Container, Row, Col, Form, Spinner } from "react-bootstrap";
-import AudioRecorder from 'react-audio-recorder';
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import { Bar } from 'react-chartjs-2';
-import { ReactMic } from 'react-mic';
 
-// import AudioReactRecorder from 'audio-react-recorder'
-
-// import "./App.css";
+import AudioReactRecorder from 'audio-react-recorder'
 import "./style.css";
+
 var prediction = {};
-var prediction_nr = {};
 function App() {
   const [audioPreview, setAudioPreview] = useState(null);
-  const [audio, setAudio] = useState(null);
   const [noiseReducedAudio, setNoiseReducedAudio] = useState(null);
   const [spectrogram, setSpectrogram] = useState(null);
   const [noiseReducedSpectrogram, setNoiseReducedSpectrogram] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [record, setRecord] = useState(false);
-
-  const [noiseReduction, setNoiseReduction] = useState(false);
-
+  const [noiseReduction, setNoiseReduction] = useState("false");
   const [recordState, setRecordState] = useState(null);
-  // const [prediction, setPrediction] = useState({});
-
-  // const imageToBase64 = require("image-to-base64");
 
   const onChangeAudio = async (e) => {
     setAudioPreview(URL.createObjectURL(e.target.files[0]));
-    setAudio(e.target.files[0]);
     setLoading(true);
 
     let formData = new FormData();
     formData.append("file", e.target.files[0]);
     formData.append("noiseReduction", noiseReduction)
-    //Code to send audio to backend
     sendAudio(formData)
   };
 
@@ -53,9 +40,7 @@ function App() {
           "data:image/jpeg;base64," + response.data.spectrogram_image_nr
         );
         setNoiseReducedAudio("data:audio/wav;base64," + response.data.audio_nr);
-        // setPrediction(response.data.prediction)
         prediction = JSON.parse(response.data.prediction)
-        // prediction_nr = JSON.parse(response.data.prediction_nr)
 
         setLoading(false);
       })
@@ -90,47 +75,55 @@ function App() {
           'rgb(201, 203, 207)'
         ],
         borderWidth: 1,
+        
       },
     ],
   };
 
   const options = {
     scales: {
-      yAxes: [
-        {
-          ticks: {
-            beginAtZero: true,
-          },
-        },
-      ],
+      x: {
+        title: {
+          color: 'white',
+          display: true,
+          text: 'Emotions'
+        }
+      },
+      y: {
+        title: {
+          color: 'white',
+          display: true,
+          text: 'Probability'
+        }
+      },
     },
   };
 
   const startRecording = () => {
-    setRecord(true)
-    // setRecordState('start')
+    setRecordState('start')
   }
 
   const stopRecording = () => {
-    setRecord(false)
-    // setRecordState('stop')
-  }
-
-  const onData = (recordedBlob) => {
-    console.log('chunk of real-time data is: ', recordedBlob);
-
-
+    setRecordState('stop')
+    
   }
 
   const onStop = (recordedBlob) => {
     console.log('recordedBlob is: ', recordedBlob);
 
-    setAudioPreview(recordedBlob.blobURL);
-    setAudio(recordedBlob.blob);
+    setAudioPreview(recordedBlob.url);
     setLoading(true);
 
     let formData = new FormData();
-    formData.append("file", recordedBlob.blob);
+    if(noiseReduction == "true"){
+      formData.append("file", recordedBlob.blob);
+      formData.append("noiseReduction", "true-recorded")
+    }
+    else{
+      formData.append("file", recordedBlob.blob);
+      formData.append("noiseReduction", noiseReduction)
+    }
+
     //Code to send audio to backend
     sendAudio(formData)
   }
@@ -173,7 +166,7 @@ function App() {
                     name="noiseReduceRadio"
                     id="noiseReduceRadio1"
                     // value={true}
-                    onChange={(e) => setNoiseReduction(true)}
+                    onChange={(e) => setNoiseReduction("true")}
                   />
                   <Form.Check
                     type="radio"
@@ -181,7 +174,7 @@ function App() {
                     name="noiseReduceRadio"
                     id="noiseReduceRadio2"
                     // value={false}
-                    onChange={(e) => setNoiseReduction(false)}
+                    onChange={(e) => setNoiseReduction("false")}
                     defaultChecked
                   />
                 </Col>
@@ -191,16 +184,11 @@ function App() {
           </Col>
           <Col>
             <p>Audio Recording:</p>
-            <ReactMic
-              record={record}
-              className="sound-wave"
-              mimeType="audio/wav"
+            <AudioReactRecorder
+              state={recordState}
               onStop={onStop}
-              onData={onData}
-              bufferSize={1024}
-              sampleRate={44100}
-            // strokeColor="#000000"
-            // backgroundColor="#FF4081"
+              backgroundColor='rgb(255,255,255)'
+              canvasHeight={100}
             />
             <button onClick={startRecording} type="button">Start</button>
             <button onClick={stopRecording} type="button">Stop</button>
@@ -212,13 +200,11 @@ function App() {
             <h3>Input Audio</h3>
             <audio controls src={audioPreview} />
             <img style={{ width: "100%" }} src={spectrogram} />
-            {/* <Bar data={data} options={options} hidden={spectrogram == null}/> */}
           </Col>
           <Col className="Audio-output">
             <h3>Noise Reduced Audio</h3>
             <audio controls src={noiseReducedAudio} />
             <img style={{ width: "100%" }} src={noiseReducedSpectrogram} />
-            {/* <Bar data={data_nr} options={options} hidden={noiseReducedSpectrogram == null}/> */}
           </Col>
         </Row>
         <Row>
